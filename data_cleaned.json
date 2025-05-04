@@ -1,0 +1,3 @@
+{"text":"Hello, world!","target":1,"cleaned_text":"hello world"}
+{"text":"This is a test sentence, isn't it?","target":0,"cleaned_text":"test sentence isnt"}
+{"text":"Python programming is fun; let's code more!","target":1,"cleaned_text":"python programming fun let code"}
