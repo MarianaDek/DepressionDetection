@@ -114,24 +114,28 @@ def main(
         summary.append(res)
         print(f"Trained {name}, best vec={best_key}, acc={res['accuracy']}")
 
-    # --- save summary ---
-    if not os.path.exists(results_file):
-        with open(results_file, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow([
-                'algorithm','vectorizer','accuracy','f1_score',
-                'precision','recall','training_time_sec','model_filepath'
-            ])
+    write_header = not os.path.exists(results_file)
     with open(results_file, 'a', newline='') as f:
         writer = csv.writer(f)
-        for r in summary:
+        if write_header:
             writer.writerow([
-                r['algorithm'], r['vectorizer'], r['accuracy'],
-                r['f1_score'], r['precision'], r['recall'],
-                r['training_time_sec'], r['model_filepath']
+                'algorithm', 'vectorizer', 'accuracy', 'f1_score',
+                'precision', 'recall', 'training_time_sec', 'model_filepath'
             ])
 
-    print('All models processed and results saved.')
+        for r in summary:
+            writer.writerow([
+                r.get('algorithm'),
+                r.get('vectorizer'),
+                r.get('accuracy'),
+                r.get('f1_score'),
+                r.get('precision'),
+                r.get('recall'),
+                r.get('training_time_sec'),
+                r.get('model_filepath')
+            ])
+
+    print("All models processed and summary saved to", results_file)
 
 
 if __name__ == '__main__':

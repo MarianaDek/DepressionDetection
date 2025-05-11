@@ -15,32 +15,40 @@ from src.ml.model_evaluation import evaluate_model
 
 
 def load_dataset(path: str):
-    """
-    Завантажує CSV або Excel і повертає тексти, метадані та мітки.
-    """
     ext = os.path.splitext(path)[1].lower()
-    df = pd.read_excel(path) if ext in ('.xls', '.xlsx') else pd.read_csv(path)
+    if ext in ('.xls', '.xlsx'):
+        df = pd.read_excel(path)
+    else:
+        df = pd.read_csv(path)
+
+    if 'label' in df.columns:
+        df = df.dropna(subset=['label'])
+    else:
+        last_col = df.columns[-1]
+        if df[last_col].dtype.kind in ('i', 'f'):
+            df = df.dropna(subset=[last_col])
 
     if {'title','text'}.issubset(df.columns) and df.dtypes[-1] in (np.int64, np.int32):
         texts = df['text'].astype(str).tolist()
-        y = df.iloc[:, -1].values
+        y     = df.iloc[:, -1].astype(int).values
         meta_X = None
+
     elif {'text','label','Age','Gender','Age Category'}.issubset(df.columns):
         texts = df['text'].astype(str).tolist()
-        y = df['label'].values
+        y     = df['label'].astype(int).values
+
         age = df[['Age']].to_numpy(dtype=float)
-        ohe = OneHotEncoder(sparse=False, handle_unknown='ignore')
+        ohe = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
         cat = ohe.fit_transform(df[['Gender','Age Category']])
         meta_X = np.hstack([age, cat])
+
     else:
-        raise KeyError(f"Unknown dataset format: {path}")
+        raise KeyError(f"Невідомий формат датасету: {path}")
+
     return texts, meta_X, y
 
-
 def combine_text_and_meta(X_text, meta_X):
-    """
-    Об’єднує векторизовані тексти з метаданими.
-    """
+
     if meta_X is None:
         return X_text
     if hasattr(X_text, 'toarray'):
@@ -49,13 +57,6 @@ def combine_text_and_meta(X_text, meta_X):
 
 
 def preprocess_and_vectorize(dataset_path: str):
-    """
-    1) load_dataset
-    2) очищення через preprocess_text
-    3) vectorize_texts
-    4) combine_text_and_meta
-    Повертає dict {vectorizer_key: (vec_obj, X_full)} та y.
-    """
     texts, meta_X, y = load_dataset(dataset_path)
     cleaned = [preprocess_text(t) for t in texts]
     vecs = vectorize_texts(cleaned)
@@ -74,9 +75,6 @@ def fit_and_evaluate(
     random_state: int = 42,
     stratify: bool = True
 ):
-    """
-    Розбиває дані, навчає classifier, виводить детальний звіт та повертає модель і метрики.
-    """
     X_tr, X_te, y_tr, y_te = train_test_split(
         X_full, y,
         test_size=test_size,
@@ -84,28 +82,23 @@ def fit_and_evaluate(
         stratify=y if stratify else None
     )
 
-    # sparse → dense
     if hasattr(X_tr, 'toarray'):
         X_fit, X_val = X_tr.toarray(), X_te.toarray()
     else:
         X_fit, X_val = X_tr, X_te
 
-    # обрізати негативні для NB
     if isinstance(classifier, MultinomialNB):
         X_fit = np.clip(X_fit, a_min=0.0, a_max=None)
         X_val = np.clip(X_val, a_min=0.0, a_max=None)
 
-    # тренування (sklearn.fit повертає модель, scratch.fit може повернути None)
     start = time.time()
     trained = classifier.fit(X_fit, y_tr)
     duration = time.time() - start
     model = trained if trained is not None else classifier
 
-    # вивести звіт
     print("\n--- Evaluation Report ---")
     evaluate_model(model, X_val, y_te)
 
-    # підрахунок метрик
     preds = model.predict(X_val)
     metrics = {
         'accuracy': round(accuracy_score(y_te, preds), 4),
@@ -121,9 +114,7 @@ def train_and_save_model(
     dataset_path, classifier, algo_name, vectorizer_key,
     models_dir: str = "../models"
 ):
-    """
-    Повний pipeline: preprocess_and_vectorize → fit_and_evaluate → save_model.
-    """
+
     full_vecs, y = preprocess_and_vectorize(dataset_path)
     if vectorizer_key not in full_vecs:
         raise KeyError(f"Vectorizer '{vectorizer_key}' not found in {list(full_vecs)}")
