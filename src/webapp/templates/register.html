@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Depression Detector') }} — {{ _('Registration') }}{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <h2 class="text-center mb-4">{{ _('Registration') }}</h2>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category,msg in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            {% endfor %}
+          {% endwith %}
+          <form action="{{ url_for('auth.register', lang=get_locale()) }}" method="post">
+            <div class="mb-3">
+              <label for="email" class="form-label">{{ _('Email') }}</label>
+              <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">{{ _('Password') }}</label>
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-success">{{ _('Register') }}</button>
+            </div>
+          </form>
+          <p class="text-center mt-3">
+            <small>{{ _('Already registered?') }}
+              <a href="{{ url_for('auth.login', lang=get_locale()) }}">{{ _('Log In') }}</a>
+            </small>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

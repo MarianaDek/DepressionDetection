@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Depression Detector') }} — {{ _('Analysis History') }}{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">{{ _('Analysis History') }}</h1>
+    <a href="{{ url_for('webapp.analyze', lang=get_locale()) }}"
+       class="btn btn-primary">
+      {{ _('New Analysis') }}
+    </a>
+  </div>
+
+  {% if analyses %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>{{ _('Time') }}</th>
+          <th>{{ _('Result') }}</th>
+          <th>{{ _('Probabilities') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in analyses %}
+          <tr>
+            <td>{{ r.timestamp }}</td>
+            <td>{{ r.result }}</td>
+            <td>
+              {% for name,p in r.probas.items() %}
+                {{ name }}: {{ (p*100)|round(1) }}%<br>
+              {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="card mt-5">
+      <div class="card-body">
+        <h5 class="card-title">{{ _('Depression Probability Trend') }}</h5>
+        <canvas id="trendChart" height="100"></canvas>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="alert alert-info">{{ _('You have no saved analyses yet.') }}</div>
+  {% endif %}
+{% endblock %}
+
+{% block body_extra %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const labels = {{ chart_labels|tojson|safe }};
+    const data   = {{ chart_data|tojson|safe }};
+    const ctx    = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: '{{ _("Depression Probability") }} (%)',
+          data: data,
+          fill: false,
+          tension: 0.3,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero: true, max:100 } }
+      }
+    });
+  </script>
+{% endblock %}
+
+

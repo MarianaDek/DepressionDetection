@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Depression Detector') }} — {{ _('Analysis') }}{% endblock %}
+
+{% block content %}
+  <h1 class="mb-4">{{ _('Text Analysis') }}</h1>
+  <p><a href="{{ url_for('webapp.home', lang=get_locale()) }}">&larr; {{ _('Home') }}</a></p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, msg in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="text" class="form-label">{{ _('Enter text for analysis') }}</label>
+      <textarea id="text" name="text" class="form-control" rows="6"
+                placeholder="{{ _('Write or paste text…') }}"></textarea>
+    </div>
+    <div class="mb-3">
+      <label for="file" class="form-label">{{ _('Or upload a file') }}</label>
+      <input type="file" id="file" name="file" class="form-control"
+             accept=".txt,.pdf,.doc,.docx">
+    </div>
+    <button type="submit" class="btn btn-primary">{{ _('Analyze') }}</button>
+  </form>
+{% endblock %}
+
+

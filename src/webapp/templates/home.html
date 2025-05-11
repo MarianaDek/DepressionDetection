@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Depression Detector') }} — {{ _('Home') }}{% endblock %}
+
+{% block content %}
+  <section class="text-center mb-5">
+    <h1 class="display-4 fw-bold">{{ _('Depression Detector') }}</h1>
+    <p class="lead">{{ _('This service helps analyze your text for signs of depression.') }}</p>
+    <p>{{ _('Simply enter or paste text, or upload a document, and our model will show the likelihood of your content being “depressive.”') }}</p>
+    <a href="{{ url_for('webapp.analyze', lang=get_locale()) }}" class="btn btn-primary btn-lg mt-3">
+      {{ _('Go to Analysis') }}
+    </a>
+  </section>
+
+  <div class="row text-center g-4">
+    <div class="col-md-4">
+      <i class="bi bi-bullseye display-4 text-primary"></i>
+      <h5 class="mt-3">{{ _('Goal') }}</h5>
+      <p>{{ _('Help identify the emotional state through text.') }}</p>
+    </div>
+    <div class="col-md-4">
+      <i class="bi bi-clipboard-check display-4 text-primary"></i>
+      <h5 class="mt-3">{{ _('Instructions') }}</h5>
+      <ol class="text-start">
+        <li>{{ _('Go to the analysis page.') }}</li>
+        <li>{{ _('Enter text or upload a file (.txt, .pdf, .docx).') }}</li>
+        <li>{{ _('Click “Analyze” and wait for the result.') }}</li>
+      </ol>
+    </div>
+    <div class="col-md-4">
+      <i class="bi bi-bar-chart-line display-4 text-primary"></i>
+      <h5 class="mt-3">{{ _('Result') }}</h5>
+      <p>{{ _('Percentage of depression likelihood and recommendation.') }}</p>
+    </div>
+  </div>
+
+  <div class="alert alert-warning mt-5" role="alert">
+    <h5 class="alert-heading">{{ _('Attention') }}!</h5>
+    <p>{{ _('Analysis results are not 100%% accurate and do not replace professional diagnosis.') }}</p>
+    <hr>
+    <p class="mb-0">{{ _('If you feel persistent sadness or other depression symptoms, we recommend consulting a specialist.') }}</p>
+  </div>
+
+{% endblock %}
