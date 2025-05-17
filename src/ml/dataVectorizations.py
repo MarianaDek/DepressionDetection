@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.sparse import csr_matrix
-
+from collections import defaultdict
 def vectorize_texts(cleaned_texts, w2v_size=100, random_state=42):
     # ------------------------
-    # 1) Count Vectorization
+    # 1) Bag-of-Words (Count Vectorization) 
     # ------------------------
     count_vocab = {}
     for doc in cleaned_texts:
@@ -14,14 +14,19 @@ def vectorize_texts(cleaned_texts, w2v_size=100, random_state=42):
     data = []
     rows = []
     cols = []
+
     for i, doc in enumerate(cleaned_texts):
+        token_counts = defaultdict(int)
         for token in doc.split():
             if token in count_vocab:
-                rows.append(i)
-                cols.append(count_vocab[token])
-                data.append(1)
-    X_count = csr_matrix((data, (rows, cols)), shape=(len(cleaned_texts), len(count_vocab)))
-    print("Count Vectorization shape:", X_count.shape)
+                token_counts[token] += 1
+        for token, count in token_counts.items():
+            rows.append(i)
+            cols.append(count_vocab[token])
+            data.append(count)
+
+    X_bow = csr_matrix((data, (rows, cols)), shape=(len(cleaned_texts), len(count_vocab)))
+    print("Bag-of-Words shape:", X_bow.shape)
 
     # ---------------------------------
     # 2) N-grams Vectorization
