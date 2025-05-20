@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Support for') }} {{ disorder.title }}{% endblock %}
+
+{% block content %}
+<div class="container my-5 p-4 bg-light rounded shadow-sm">
+    <h1 class="mb-4 fw-bold"  style="color:#6495ED;">{{ _('If you need help to cope with ') }} {{ disorder.title }}</h1>
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <p class="card-text fs-5 text-green">{{ _(disorder.description) }}</p>
+        </div>
+    </div>
+
+    {% if disorder.resources %}
+    <h5 class="mb-3 fw-semibold"  style="color:#0F52BA;">{{ _('Helpful resources:') }}</h5>
+    <ul class="list-group mb-4 shadow-sm rounded">
+        {% for res in disorder.resources %}
+        <li class="list-group-item d-flex align-items-center gap-3">
+            <i class="bi bi-link-45deg fs-4 "  style="color: #6495ED; transition: color 0.3s;"></i>
+            <a href="{{ res.url }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none fw-medium"
+               style="color: #6495ED; transition: color 0.3s;">
+                {{ res.name }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted fst-italic">{{ _('No resources available.') }}</p>
+    {% endif %}
+
+    <a href="{{ url_for('webapp.analyze', lang=get_locale()) }}"
+       class="btn  btn-primary px-4 py-2 fw-semibold rounded">
+        {{ _('Back to Analysis') }}
+    </a>
+</div>
+{% endblock %}

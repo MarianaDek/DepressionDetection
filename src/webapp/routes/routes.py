@@ -54,13 +54,6 @@ def analyze():
             flash(f"Model error: {e}", 'danger')
             return render_template('analyze.html')
 
-        # if not is_depr:
-        #     result_label = 'Not Depressed'
-        #     record_probs = {'Not Depressed': round(1 - prob_depr, 4)}
-        # else:
-        #     result_label = type_label
-        #     record_probs = {'Depressed': round(prob_depr, 4)}
-
         result_label = 'Depressed' if is_depr else 'Not Depressed'
         binary_probs = {
             'Depressed': round(prob_depr, 4),
@@ -88,3 +81,64 @@ def analyze():
     return render_template('analyze.html')
 
 
+@bp.route('/support/<disorder>')
+@login_required
+def support(disorder):
+    support_data = {
+        'Stress': {
+            'title': 'Stress',
+            'description': 'Information about stress and available support.',
+            'resources': [
+                {'name': 'Free online therapy sessions',
+                 'url': 'https://www.therapyroute.com/free-therapy-for-ukraine'},
+                {'name': 'Online support groups', 'url': 'https://www.heypeers.com/meetings/42423/details'},
+                {'name': 'Articles about stress management', 'url': 'https://www.stress-management-articles.com'},
+            ]
+        },
+        'Depression': {
+            'title': 'Depression',
+            'description': 'Information about depression and available support.',
+            'resources': [
+                {'name': 'Free online therapy sessions',
+                 'url': 'https://www.therapyroute.com/free-therapy-for-ukraine'},
+                {'name': 'Online support groups', 'url': 'https://www.heypeers.com/meetings/42410/details'},
+                {'name': 'Articles about depression', 'url': 'https://www.depression-info.com'},
+            ]
+        },
+        'Bipolar disorder': {
+            'title': 'Bipolar disorder',
+            'description': 'Information about bipolar disorder and available support.',
+            'resources': [
+                {'name': 'Free online therapy sessions',
+                 'url': 'https://www.therapyroute.com/free-therapy-for-ukraine'},
+                {'name': 'Online support groups', 'url': 'https://www.heypeers.com/meetings/41928/details'},
+                {'name': 'Articles about bipolar disorder', 'url': 'https://www.bipolar-info.com'},
+            ]
+        },
+        'Personality disorder': {
+            'title': 'Personality disorder',
+            'description': 'Information about personality disorders and available support.',
+            'resources': [
+                {'name': 'Free online therapy sessions',
+                 'url': 'https://www.therapyroute.com/free-therapy-for-ukraine'},
+                {'name': 'Online support groups', 'url': 'https://www.heypeers.com/meetings/41928/details'},
+                {'name': 'Articles about personality disorders', 'url': 'https://www.personality-disorder-info.com'},
+            ]
+        },
+        'Anxiety': {
+            'title': 'Anxiety',
+            'description': 'Information about anxiety and available support.',
+            'resources': [
+                {'name': 'Free online therapy sessions',
+                 'url': 'https://www.therapyroute.com/free-therapy-for-ukraine'},
+                {'name': 'Online support groups', 'url': 'https://www.heypeers.com/meetings/41928/details'},
+                {'name': 'Articles about anxiety', 'url': 'https://www.anxiety-info.com'},
+            ]
+        },
+    }
+    data = support_data.get(disorder, {
+        'title': disorder,
+        'description': 'Information not available.',
+        'resources': []
+    })
+    return render_template('support.html', disorder=data)

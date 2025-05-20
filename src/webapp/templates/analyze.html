@@ -57,6 +57,10 @@
         id="text" name="text" class="form-control" rows="6"
         placeholder="{{ _('Write or paste text…') }}"
       >{{ request.form.get('text','') }}</textarea>
+      <button type="button" id="start-record-btn" class="btn btn-outline-secondary mt-2">
+        🎤 {{ _('Start Speaking') }}
+      </button>
+      <small id="voice-status" class="form-text text-muted"></small>
     </div>
 
     <div class="mb-3">
@@ -70,6 +74,7 @@
     <button type="submit" class="btn btn-primary">{{ _('Analyze') }}</button>
   </form>
 {% endblock %}
+
 {% block body_extra %}
 <script>
   const ageInput     = document.getElementById('age');
@@ -112,7 +117,43 @@
   }
 
   ageInput.addEventListener('input', updateAgeCategory);
-
   document.addEventListener('DOMContentLoaded', updateAgeCategory);
+
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    document.getElementById('voice-status').textContent = "{{ _('Voice input not supported in this browser.') }}";
+  } else {
+    const recognition = new SpeechRecognition();
+    recognition.lang = '{{ get_locale() }}';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    const startBtn = document.getElementById('start-record-btn');
+    const status = document.getElementById('voice-status');
+    const textarea = document.getElementById('text');
+
+    startBtn.addEventListener('click', () => {
+      recognition.start();
+      status.textContent = "{{ _('Listening... Speak now.') }}";
+      startBtn.disabled = true;
+    });
+
+    recognition.addEventListener('result', (event) => {
+      const transcript = event.results[0][0].transcript;
+      textarea.value += (textarea.value ? ' ' : '') + transcript;
+      status.textContent = "{{ _('Voice input finished.') }}";
+      startBtn.disabled = false;
+    });
+
+    recognition.addEventListener('speechend', () => {
+      recognition.stop();
+    });
+
+    recognition.addEventListener('error', (event) => {
+      status.textContent = "{{ _('Error occurred in recognition:') }} " + event.error;
+      startBtn.disabled = false;
+    });
+  }
 </script>
 {% endblock %}
