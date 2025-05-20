@@ -1,36 +1,27 @@
 import numpy as np
 from scipy.sparse import csr_matrix
-from collections import defaultdict
+from sklearn.feature_extraction.text import TfidfVectorizer
 def vectorize_texts(cleaned_texts, w2v_size=100, random_state=42):
-    # ------------------------
-    # 1) Bag-of-Words (Count Vectorization) 
-    # ------------------------
-    count_vocab = {}
+
+    boW_vocab = {}
     for doc in cleaned_texts:
         for token in doc.split():
-            if token not in count_vocab:
-                count_vocab[token] = len(count_vocab)
+            if token not in boW_vocab:
+                boW_vocab[token] = len(boW_vocab)
 
     data = []
     rows = []
     cols = []
-
     for i, doc in enumerate(cleaned_texts):
-        token_counts = defaultdict(int)
         for token in doc.split():
-            if token in count_vocab:
-                token_counts[token] += 1
-        for token, count in token_counts.items():
-            rows.append(i)
-            cols.append(count_vocab[token])
-            data.append(count)
+            if token in boW_vocab:
+                rows.append(i)
+                cols.append(boW_vocab[token])
+                data.append(1)
+    X_BoW = csr_matrix((data, (rows, cols)), shape=(len(cleaned_texts), len(boW_vocab)))
+    print("BoW Vectorization shape:", X_BoW.shape)
 
-    X_bow = csr_matrix((data, (rows, cols)), shape=(len(cleaned_texts), len(count_vocab)))
-    print("Bag-of-Words shape:", X_bow.shape)
 
-    # ---------------------------------
-    # 2) N-grams Vectorization
-    # ---------------------------------
     ngram_vocab = {}
     for doc in cleaned_texts:
         tokens = doc.split()
@@ -61,19 +52,15 @@ def vectorize_texts(cleaned_texts, w2v_size=100, random_state=42):
     X_ngrams = csr_matrix((data, (rows, cols)), shape=(len(cleaned_texts), len(ngram_vocab)))
     print("N-grams Vectorization shape:", X_ngrams.shape)
 
-    # ------------------------
-    # 3) TF-IDF Vectorization
-    # ------------------------
-    from sklearn.feature_extraction.text import TfidfVectorizer
+
+
     tfidf_vectorizer = TfidfVectorizer(stop_words="english")
     X_tfidf = tfidf_vectorizer.fit_transform(cleaned_texts)
     print("TF-IDF Vectorization shape:", X_tfidf.shape)
 
-    # -------------------------------------------
-    # 4) Word2Vec Embeddings
-    # -------------------------------------------
+
     np.random.seed(random_state)
-    w2v_vocab = {term: np.random.uniform(-0.5, 0.5, size=w2v_size) for term in count_vocab}
+    w2v_vocab = {term: np.random.uniform(-0.5, 0.5, size=w2v_size) for term in boW_vocab}
     X_w2v = np.zeros((len(cleaned_texts), w2v_size), dtype=float)
     for i, doc in enumerate(cleaned_texts):
         tokens = doc.split()
@@ -83,7 +70,7 @@ def vectorize_texts(cleaned_texts, w2v_size=100, random_state=42):
     print("Word2Vec Embedding shape:", X_w2v.shape)
 
     return {
-        'count': (count_vocab, X_count),
+        'BoW': (boW_vocab, X_BoW),
         'ngrams': (ngram_vocab, X_ngrams),
         'tfidf': (tfidf_vectorizer, X_tfidf),
         'word2vec': (w2v_vocab, X_w2v),

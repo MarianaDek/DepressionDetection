@@ -1,11 +1,16 @@
 import os
-from flask import Flask, request
+from flask import Flask, request, g, session
 from flask_migrate import Migrate
-from flask_babel import Babel
 from src.webapp.extensions import db, login_manager
 from src.webapp.routes.routes import bp as webapp_bp
 from src.webapp.routes.auth import bp as auth_bp
+from src.webapp.routes.history import bp as history_bp
 from src.webapp.models import User
+
+from src.translations.translations import translations
+
+DEFAULT_LOCALE = 'uk'
+SUPPORTED_LOCALES = ['uk', 'en']
 
 def create_app():
     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -15,27 +20,28 @@ def create_app():
         static_folder=os.path.join(BASE_DIR, 'src', 'webapp', 'static')
     )
 
-
     app.config.from_object('config.Config')
 
-    app.config['BABEL_DEFAULT_LOCALE'] = app.config.get('BABEL_DEFAULT_LOCALE', 'uk')
-    app.config['BABEL_SUPPORTED_LOCALES'] = app.config.get('BABEL_SUPPORTED_LOCALES', ['uk', 'en'])
+    app.config['DEFAULT_LOCALE'] = DEFAULT_LOCALE
+    app.config['SUPPORTED_LOCALES'] = SUPPORTED_LOCALES
 
 
-    def get_locale():
+    @app.before_request
+    def detect_locale():
         lang = request.args.get('lang')
-        if lang in app.config['BABEL_SUPPORTED_LOCALES']:
-            return lang
-        return app.config['BABEL_DEFAULT_LOCALE']
+        if lang and lang in app.config['SUPPORTED_LOCALES']:
+            session['lang'] = lang
+        lang = session.get('lang', app.config['DEFAULT_LOCALE'])
+        g.lang = lang
 
-
-    babel = Babel(app, locale_selector=get_locale)
-    app.jinja_env.add_extension('jinja2.ext.i18n')
+    def _(text):
+        lang = getattr(g, 'lang', app.config['DEFAULT_LOCALE'])
+        return translations.get(lang, {}).get(text, text)
 
     @app.context_processor
-    def inject_locale():
-        return dict(get_locale=get_locale)
-
+    def inject_translations():
+        return dict(_=_,
+                    get_locale=lambda: getattr(g, 'lang', app.config['DEFAULT_LOCALE']))
 
     db.init_app(app)
     Migrate(app, db)
@@ -51,8 +57,10 @@ def create_app():
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(webapp_bp)
+    app.register_blueprint(history_bp, url_prefix='/history')
 
     return app
+
 
 if __name__ == '__main__':
     create_app().run(host='0.0.0.0', port=80, debug=True)

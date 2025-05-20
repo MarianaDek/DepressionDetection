@@ -6,8 +6,8 @@ class NaiveBayesScratch:
 
     def __init__(self, alpha=1.0):
         self.alpha = alpha
-        self.class_log_prior_ = None  # log P(c)
-        self.feature_log_prob_ = None  # log P(x_i | c)
+        self.class_log_prior_ = None
+        self.feature_log_prob_ = None
         self.classes_ = None
 
     def fit(self, X: np.ndarray, y: np.ndarray):

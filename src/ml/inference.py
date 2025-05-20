@@ -2,7 +2,6 @@ import os
 import joblib
 import numpy as np
 from scipy.sparse import csr_matrix, hstack as sparse_hstack
-
 from src.ml.dataCleaning import preprocess_text
 from src.ml.vectorizers import vectorize_one, vote_proba_rf
 
@@ -19,37 +18,31 @@ MODELS_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..', '..', 'models')
 )
 
-# знаходимо файли
+
 BIN_PATH = next(
     os.path.join(MODELS_DIR, f)
     for f in os.listdir(MODELS_DIR)
-    if f.startswith('NB_Binary_count') and f.endswith('.pkl')
+    if f.startswith('RF_Binary_tfidf') and f.endswith('.pkl')
 )
 TYPE_PATH = next(
     os.path.join(MODELS_DIR, f)
     for f in os.listdir(MODELS_DIR)
-    if f.startswith('NB_Multi_ngrams') and f.endswith('.pkl')
+    if f.startswith('RF_Multi_tfidf') and f.endswith('.pkl')
 )
 
-# завантажуємо
+
 bin_model,  bin_vec  = joblib.load(BIN_PATH)
 type_model, type_vec = joblib.load(TYPE_PATH)
 
 
 def _combine_text_and_meta(X_text, age: float, gender: float, age_cat: float):
-    """
-    Прикріплює до X_text (1×D_text) вік, стать, категорію +
-    дороблює нулі так, щоб збіглося із bin_model.n_features_in_.
-    """
-    # 1) перші 3 мета-ознаки
-    meta = np.array([[age, gender, age_cat]])  # shape (1,3)
 
-    # 2) порахуємо, скільки фіч чекає модель
+    meta = np.array([[age, gender, age_cat]])
+
     total_expected = bin_model.n_features_in_
     text_dim = X_text.shape[1]
     meta_dim = meta.shape[1]
 
-    # 3) скільки ще «порожніх» фічів треба підсипати
     missing = total_expected - (text_dim + meta_dim)
     if missing < 0:
         raise ValueError(
@@ -57,10 +50,8 @@ def _combine_text_and_meta(X_text, age: float, gender: float, age_cat: float):
             f"but text+meta give {text_dim+meta_dim}"
         )
 
-    # 4) побудуємо масив нулів shape=(1,missing)
     pad = np.zeros((1, missing), dtype=float)
 
-    # 5) з'єднаємо залежно від того, sparse чи ні
     if hasattr(X_text, 'toarray'):
         return sparse_hstack([
             X_text,
@@ -72,28 +63,22 @@ def _combine_text_and_meta(X_text, age: float, gender: float, age_cat: float):
 
 
 def predict_full(text: str, age: float, gender: float, age_cat: float):
-    """
-    1) бінарна модель (text+meta)
-    2) якщо депресія – мультиклас по тексту
-    """
-    # векторизуємо текст
     cleaned = preprocess_text(text)
-    X_txt   = vectorize_one(cleaned, bin_vec)    # (1×D_text)
+    X_txt   = vectorize_one(cleaned, bin_vec)
     X_full  = _combine_text_and_meta(X_txt, age, gender, age_cat)
 
-    # прогноз бінарної моделі
     if hasattr(bin_model, 'predict_proba'):
         p1 = bin_model.predict_proba(X_full)[0][1]
     else:
         p1 = float(bin_model.predict(X_full)[0] == 1)
     is_depr = p1 >= 0.5
 
-    # якщо нема депресії
+
     if not is_depr:
         return False, p1, None, None
 
-    # ---- мультикласова модель (тільки текст) ----
-    X_type = vectorize_one(cleaned, type_vec)  # (1×D_type)
+
+    X_type = vectorize_one(cleaned, type_vec)
     if hasattr(type_model, 'predict_proba'):
         proba = type_model.predict_proba(X_type)[0]
     elif hasattr(type_model, 'trees'):

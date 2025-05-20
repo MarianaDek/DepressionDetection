@@ -66,23 +66,23 @@ def main(
     results_file: str = 'model_comparison_results.csv'
 ):
     multi_algos = {
-        # 'RF_Multi_Scratch': partial(RandomForestScratch,
-        #     n_estimators=600, max_depth=60,
-        #     min_samples_leaf=2, max_features=0.8,
-        #     bootstrap=True, random_state=42
-        # ),
+        'RF_Multi_Scratch': partial(RandomForestScratch,
+            n_estimators=600, max_depth=60,
+            min_samples_leaf=2, max_features=0.8,
+            bootstrap=True, random_state=42
+        ),
         'SVM_Multi_Scratch': partial(SVMScratch,
             lambda_param=1e-4, epochs=200, batch_size=128
         ),
         'NB_Multi_Scratch': partial(NaiveBayesScratch, alpha=1.0),
         # 'RF_Multi': RandomForestClassifier,
         # 'SVM_Multi': SVC,
-        'NB_Multi': MultinomialNB
+        # 'NB_Multi': MultinomialNB
     }
     binary_algos = {
-        'RF_Binary': RandomForestClassifier,
-        'SVM_Binary': SVC,
-        'NB_Binary': MultinomialNB
+        # 'RF_Binary': RandomForestClassifier,
+        # 'SVM_Binary': SVC,
+        # 'NB_Binary': MultinomialNB
     }
 
     os.makedirs(models_dir, exist_ok=True)
